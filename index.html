@@ -247,38 +247,73 @@ for(var i=0;i<50;i++){
 }
 
 // ==================== Init Formation ====================
+var FORMATION_ROWS=5;
+var FORMATION_COLS=8;
+var SPAWN_PATTERNS=['top','left','right','scatter','v','sides'];
+
 function initFormation(){
   enemies=[];
   var diff=DIFFICULTY[game.difficulty]||DIFFICULTY.normal;
-  var types=['bee','bee','bee','galaga','galaga','galaga','boss','boss'];
   var countMul=diff.waveCount||1;
-  var cols=Math.min(FORMATION_COLS,Math.round(FORMATION_COLS*countMul));
-  var rows=Math.min(FORMATION_ROWS,Math.round(FORMATION_ROWS*countMul));
-  for(var r=0;r<rows;r++){
-    for(var c=0;c<cols;c++){
-      var t=types[(r*cols+c)%types.length];
-      var ex=60+c*(300/cols),ey=30+r*28;
-      var hp=1,pts=10,color='#ff6b6b',size=10;
-      if(t==='galaga'){hp=2+(diff.enemyHp||1);pts=20;color='#ffa94d';size=12;}
-      if(t==='boss'){hp=4+(diff.enemyHp||1)+Math.floor(game.wave/3);pts=50;color='#da77f2';size=14;}
-      enemies.push({
-        x:ex,y:ey,ox:ex,oy:ey,hp:Math.max(1,hp),
-        maxHp:Math.max(1,hp),
-        color:color,pts:pts,size:size,type:t,
-        alive:false,  // 初始未生成
-        spawned:false,
-        diving:false,diveSpeed:(2+game.wave*0.1)*diff.diveSpd,
-        shootCD:0,formationR:r,formationC:c,
-      });
+  var numEnemies=Math.round((10+game.wave*3)*countMul);
+  numEnemies=Math.min(numEnemies,35);
+  var pattern=SPAWN_PATTERNS[(game.wave-1)%SPAWN_PATTERNS.length];
+  // Mix patterns for later waves
+  if(game.wave>3)pattern=SPAWN_PATTERNS[Math.floor(Math.random()*SPAWN_PATTERNS.length)];
+
+  for(var i=0;i<numEnemies;i++){
+    var roll=Math.random();
+    var t='bee';
+    if(roll<0.15+game.wave*0.02)t='boss';
+    else if(roll<0.4+game.wave*0.03)t='galaga';
+    var hp=1,pts=10,color='#ff6b6b',size=10;
+    if(t==='galaga'){hp=2+(diff.enemyHp||1);pts=20;color='#ffa94d';size=12;}
+    if(t==='boss'){hp=4+(diff.enemyHp||1)+Math.floor(game.wave/3);pts=50;color='#da77f2';size=14;}
+
+    // Spawn position based on pattern
+    var sx,sy;
+    if(pattern==='top'){
+      sx=40+Math.random()*(W-80);
+      sy=-20-Math.random()*80;
+    }else if(pattern==='left'){
+      sx=-20-Math.random()*80;
+      sy=40+Math.random()*(H-150);
+    }else if(pattern==='right'){
+      sx=W+20+Math.random()*80;
+      sy=40+Math.random()*(H-150);
+    }else if(pattern==='v'){
+      if(i%2===0){
+        sx=-20-Math.random()*60;
+        sy=40+Math.random()*(H-200);
+      }else{
+        sx=W+20+Math.random()*60;
+        sy=40+Math.random()*(H-200);
+      }
+    }else if(pattern==='sides'){
+      sx=Math.random()<0.5?-20-Math.random()*60:W+20+Math.random()*60;
+      sy=-20-Math.random()*80;
+    }else{ // scatter
+      sx=Math.random()<0.5?Math.random()*W:(Math.random()<0.5?-20:W+20);
+      sy=Math.random()<0.5?-20-Math.random()*60:40+Math.random()*(H-200);
     }
+
+    var targetX=40+Math.random()*(W-80);
+    var targetY=30+Math.random()*(H-200);
+
+    enemies.push({
+      x:sx,y:sy,ox:targetX,oy:targetY,hp:Math.max(1,hp),
+      maxHp:Math.max(1,hp),
+      color:color,pts:pts,size:size,type:t,
+      alive:false,spawned:false,
+      diving:false,diveSpeed:(2+game.wave*0.1)*diff.diveSpd,
+      shootCD:Math.random()*60,
+      entrySpeed:1+Math.random()*2.5,
+    });
   }
   game.enemyTotal=enemies.length;
   game.enemiesSpawned=0;
   game.spawnTimer=0;
 }
-
-var FORMATION_ROWS=5;
-var FORMATION_COLS=8;
 
 // ==================== Shooting ====================
 function shoot(){
@@ -301,22 +336,23 @@ function startDive(enemy){
 
 // ==================== Spawn Enemy (from queue) ====================
 function spawnNextEnemy(){
-  for(var i=0;i<enemies.length;i++){
-    var e=enemies[i];
-    if(!e.spawned&&!e.alive){
-      e.spawned=true;
-      e.alive=true;
-      game.enemiesSpawned++;
-      // Spawn effect
-      for(var j=0;j<10;j++)particles.push({
-        x:e.x+(Math.random()-0.5)*20,y:e.y+(Math.random()-0.5)*20,
-        vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,
-        life:10+Math.random()*10,maxLife:20,
-        color:e.color,size:2+Math.random()*3,
-      });
-      return;
-    }
-  }
+  var unspawned=[];
+  for(var i=0;i<enemies.length;i++)if(!enemies[i].spawned&&!enemies[i].alive)unspawned.push(enemies[i]);
+  if(unspawned.length===0)return;
+  // Pick random unspawned enemy
+  var e=unspawned[Math.floor(Math.random()*unspawned.length)];
+  e.spawned=true;
+  e.alive=true;
+  e.entering=true;
+  e.entrySpeed=1+Math.random()*2.5;
+  game.enemiesSpawned++;
+  // Spawn effect
+  for(var j=0;j<10;j++)particles.push({
+    x:e.x+(Math.random()-0.5)*20,y:e.y+(Math.random()-0.5)*20,
+    vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,
+    life:10+Math.random()*10,maxLife:20,
+    color:e.color,size:2+Math.random()*3,
+  });
 }
 
 // ==================== Hit Player ====================
@@ -375,14 +411,16 @@ function update(){
     if(player.shootCD>0)player.shootCD--;
     if(player.invincible>0)player.invincible--;
 
-    // ===== Spawn enemies gradually =====
+    // ===== Spawn enemies gradually - irregular bursts =====
     var diff=DIFFICULTY[game.difficulty]||DIFFICULTY.normal;
     if(game.enemiesSpawned<game.enemyTotal){
       game.spawnTimer--;
       if(game.spawnTimer<=0){
-        var spawnCount=Math.min(2,game.enemyTotal-game.enemiesSpawned);
-        for(var si=0;si<spawnCount;si++)spawnNextEnemy();
-        game.spawnTimer=diff.spawnRate||20;
+        var spawnCount=1;
+        if(Math.random()<0.2)spawnCount=2+Math.floor(Math.random()*2); // burst
+        var maxSpawn=Math.min(spawnCount,game.enemyTotal-game.enemiesSpawned);
+        for(var si=0;si<maxSpawn;si++)spawnNextEnemy();
+        game.spawnTimer=Math.max(5,Math.floor((diff.spawnRate||20)*(0.5+Math.random())));
       }
     }
 
@@ -462,13 +500,43 @@ function update(){
         if(player.invincible<=0&&Math.abs(e.x-player.x)<18&&Math.abs(e.y-player.y)<18)hitPlayer();
         continue;
       }
+
+      // Entry animation: fly from spawn pos to target pos
+      if(e.entering){
+        e.x+=(e.ox-e.x)*0.04*e.entrySpeed;
+        e.y+=(e.oy-e.y)*0.03*e.entrySpeed;
+        if(Math.abs(e.x-e.ox)<5&&Math.abs(e.y-e.oy)<5){
+          e.x=e.ox;e.y=e.oy;
+          e.entering=false;
+        }
+        if(player.invincible<=0&&Math.abs(e.x-player.x)<18&&Math.abs(e.y-player.y)<18)hitPlayer();
+        continue;
+      }
+
       if(!e.diving){
-        e.x=e.ox+Math.sin(wavePhase+(e.formationC+e.formationR)*0.5)*25;
-        e.y=e.oy+Math.sin(wavePhase*1.3+e.formationC*0.7)*8;
-        if(Math.random()<diff.enemyDive&&game.frame>120){
-          var divers=[];
-          for(var k=0;k<liveEnemies.length;k++){if(!liveEnemies[k].diving)divers.push(liveEnemies[k]);}
-          if(divers.length>0&&Math.random()<0.3)startDive(divers[Math.floor(Math.random()*divers.length)]);
+        // Random drift - less predictable than sine waves
+        if(!e.dx||Math.random()<0.01){e.dx=(Math.random()-0.5)*1.5;}
+        if(!e.dy||Math.random()<0.01){e.dy=(Math.random()-0.5)*0.6;}
+        e.ox+=e.dx||0;e.oy+=e.dy||0;
+        e.ox=Math.max(30,Math.min(W-30,e.ox));
+        e.oy=Math.max(10,Math.min(H-150,e.oy));
+        e.x+=(e.ox-e.x)*0.05;
+        e.y+=(e.oy-e.y)*0.05;
+
+        // Enemies shoot from formation too
+        if(e.type!=='bee'){
+          e.shootCD--;
+          if(e.shootCD<=0&&Math.random()<diff.enemyFire*1.5){
+            enemyBullets.push({x:e.x,y:e.y+10,vx:(player.x-e.x)*0.015,vy:1.5+Math.min(game.wave*0.03,0.8)});
+            e.shootCD=60+Math.random()*120;
+          }
+        }
+
+        // Dive logic - random enemies dive
+        if(game.frame>90&&Math.random()<diff.enemyDive){
+          var divers=0;
+          for(var k=0;k<enemies.length;k++)if(enemies[k].alive&&!enemies[k].diving)divers++;
+          if(divers>5&&Math.random()<0.25)startDive(e);
         }
       }else{
         var dx=e.diveTargetX-e.x,dy=e.diveTargetY-e.y;
@@ -476,16 +544,15 @@ function update(){
         if(dist>5){e.x+=dx/dist*e.diveSpeed;e.y+=dy/dist*e.diveSpeed;}
         else{
           e.diving=false;
-          var countMul=(DIFFICULTY[game.difficulty]||DIFFICULTY.normal).waveCount||1;
-          e.ox=60+e.formationC*(300/(Math.min(FORMATION_COLS,Math.round(FORMATION_COLS*countMul))));
-          e.oy=30+e.formationR*28;
+          e.ox=40+Math.random()*(W-80);
+          e.oy=30+Math.random()*(H-200);
           e.x=e.ox;e.y=e.oy;
         }
         if(e.type==='galaga'||e.type==='boss'){
           e.shootCD--;
-          if(e.shootCD<=0&&Math.random()<diff.enemyFire){
+          if(e.shootCD<=0&&Math.random()<diff.enemyFire*2){
             enemyBullets.push({x:e.x,y:e.y+10,vx:(player.x-e.x)*0.02,vy:2+Math.min(game.wave*0.03,0.8)});
-            e.shootCD=90;
+            e.shootCD=60+Math.random()*60;
           }
         }
         if(player.invincible<=0&&Math.abs(e.x-player.x)<18&&Math.abs(e.y-player.y)<18)hitPlayer();

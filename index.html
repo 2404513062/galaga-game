@@ -231,9 +231,12 @@ var game={
   spawnTimer:0,
 };
 var player={x:W/2,y:H-80,speed:5,shootCD:0,invincible:0};
+var playerBuffs={attackspeed:0,shield:0};
 var BULLETS=[];
 var enemies=[];
 var enemyBullets=[];
+var powerups=[];
+var freezeTimer=0;
 var particles=[];
 // input: dx (float -1~1), dy (float -1~1), fire (bool)
 var input={dx:0,dy:0,fire:false};
@@ -281,7 +284,7 @@ var FORMATION_COLS=8;
 function shoot(){
   if(player.shootCD>0)return;
   BULLETS.push({x:player.x,y:player.y-20,vx:0,vy:-8});
-  player.shootCD=10;
+  player.shootCD=playerBuffs.attackspeed>0?4:10;
   for(var i=0;i<4;i++)particles.push({
     x:player.x+(Math.random()-0.5)*12,y:player.y-18,
     vx:(Math.random()-0.5)*2,vy:-Math.random()*3-1,
@@ -318,6 +321,18 @@ function spawnNextEnemy(){
 
 // ==================== Hit Player ====================
 function hitPlayer(){
+  // Shield absorbs one hit
+  if(playerBuffs.shield>0){
+    playerBuffs.shield=0;
+    player.invincible=60;
+    game.screenShake=6;
+    for(var i=0;i<20;i++)particles.push({
+      x:player.x+(Math.random()-0.5)*20,y:player.y+(Math.random()-0.5)*20,
+      vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,
+      life:15+Math.random()*15,maxLife:30,color:'#4dabf7',size:2+Math.random()*4,
+    });
+    return;
+  }
   game.lives--;
   game.noHit=false;
   player.invincible=90;
@@ -355,7 +370,8 @@ function update(){
       player.x=Math.max(20,Math.min(W-20,player.x+mx*player.speed));
       player.y=Math.max(30,Math.min(H-70,player.y+my*player.speed));
     }
-    if(input.fire)shoot();
+    // Auto-fire always on
+    shoot();
     if(player.shootCD>0)player.shootCD--;
     if(player.invincible>0)player.invincible--;
 
@@ -395,6 +411,17 @@ function update(){
             game.combo++;game.comboTimer=90;
             if(game.combo>game.maxComboThisGame)game.maxComboThisGame=game.combo;
             game.screenShake=6;
+            // Power-up drop chance (15%)
+            if(Math.random()<0.15){
+              var types=['attackspeed','health','shield','freeze'];
+              var icons=['⚡','❤️','🛡️','❄️'];
+              var colors=['#ffd43b','#ff6b6b','#4dabf7','#74c0fc'];
+              var idx=Math.floor(Math.random()*types.length);
+              powerups.push({
+                x:e.x,y:e.y,type:types[idx],icon:icons[idx],
+                color:colors[idx],size:10,vy:1.2,
+              });
+            }
             for(var k=0;k<20;k++)particles.push({
               x:e.x+(Math.random()-0.5)*20,y:e.y+(Math.random()-0.5)*20,
               vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,
@@ -431,6 +458,10 @@ function update(){
     for(var j=0;j<enemies.length;j++){
       var e=enemies[j];
       if(!e.alive)continue;
+      if(freezeTimer>0){// Frozen - no movement or shooting
+        if(player.invincible<=0&&Math.abs(e.x-player.x)<18&&Math.abs(e.y-player.y)<18)hitPlayer();
+        continue;
+      }
       if(!e.diving){
         e.x=e.ox+Math.sin(wavePhase+(e.formationC+e.formationR)*0.5)*25;
         e.y=e.oy+Math.sin(wavePhase*1.3+e.formationC*0.7)*8;
@@ -479,6 +510,29 @@ function update(){
     }
     if(game.screenShake>0)game.screenShake*=0.85;
     if(game.screenShake<0.5)game.screenShake=0;
+
+    // ===== Power-ups =====
+    for(var i=powerups.length-1;i>=0;i--){
+      var pu=powerups[i];
+      pu.y+=pu.vy;
+      if(pu.y>H+20){powerups.splice(i,1);continue;}
+      if(Math.abs(pu.x-player.x)<20&&Math.abs(pu.y-player.y)<25){
+        if(pu.type==='health'){
+          game.lives=Math.min(game.lives+1,5);
+          for(var k=0;k<10;k++)particles.push({
+            x:player.x+(Math.random()-0.5)*20,y:player.y+(Math.random()-0.5)*20,
+            vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,
+            life:15,maxLife:15,color:'#ff6b6b',size:3,
+          });
+        }else if(pu.type==='shield'){playerBuffs.shield=600;
+        }else if(pu.type==='attackspeed'){playerBuffs.attackspeed=600;
+        }else if(pu.type==='freeze'){freezeTimer=300;}
+        powerups.splice(i,1);
+      }
+    }
+    if(playerBuffs.attackspeed>0)playerBuffs.attackspeed--;
+    if(playerBuffs.shield>0)playerBuffs.shield--;
+    if(freezeTimer>0)freezeTimer--;
   }
 
   // HUD
@@ -510,6 +564,14 @@ function draw(){
     var e=enemies[i];if(!e.alive)continue;
     if(e.diving){ctx.shadowColor=e.color;ctx.shadowBlur=12;}
     drawEnemy(e);ctx.shadowBlur=0;
+    if(freezeTimer>0){
+      ctx.save();ctx.translate(e.x,e.y);
+      ctx.strokeStyle='rgba(200,240,255,'+(0.3+Math.sin(game.frame*0.1)*0.15)+')';
+      ctx.lineWidth=1;ctx.setLineDash([2,3]);
+      ctx.beginPath();ctx.arc(0,0,e.size+4,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
   }
 
   // Bullets
@@ -542,6 +604,58 @@ function draw(){
     ctx.shadowColor='#ffd43b';ctx.shadowBlur=10;
     ctx.fillText('🔥 '+game.combo+'连击! x'+(1+Math.min(game.combo,20)*0.1).toFixed(1),W/2,120);
     ctx.shadowBlur=0;
+  }
+
+  // Power-ups
+  for(var i=0;i<powerups.length;i++){
+    var pu=powerups[i];
+    ctx.save();ctx.translate(pu.x,pu.y);
+    var bob=Math.sin(game.frame*0.08+i)*2;
+    ctx.translate(0,bob);
+    ctx.shadowColor=pu.color;ctx.shadowBlur=12;
+    ctx.fillStyle=pu.color+'33';ctx.beginPath();ctx.arc(0,0,pu.size+2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.beginPath();ctx.arc(0,0,pu.size,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=pu.color;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,pu.size,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='12px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(pu.icon,0,1);
+    ctx.shadowBlur=0;ctx.restore();
+  }
+
+  // Buff indicators
+  if(playerBuffs.attackspeed>0||playerBuffs.shield>0||freezeTimer>0){
+    var bx=10,by=50;
+    ctx.font='12px system-ui,sans-serif';
+    ctx.textAlign='left';
+    if(playerBuffs.attackspeed>0){
+      ctx.fillStyle='#ffd43b';
+      ctx.fillText('⚡攻速 '+(playerBuffs.attackspeed/60).toFixed(1)+'s',bx,by);
+      by+=18;
+    }
+    if(playerBuffs.shield>0){
+      ctx.fillStyle='#4dabf7';
+      ctx.fillText('🛡️护盾 '+(playerBuffs.shield/60).toFixed(1)+'s',bx,by);
+      by+=18;
+    }
+    if(freezeTimer>0){
+      ctx.fillStyle='#74c0fc';
+      ctx.fillText('❄️冰冻 '+(freezeTimer/60).toFixed(1)+'s',bx,by);
+    }
+  }
+
+  // Shield visual around player
+  if(playerBuffs.shield>0){
+    ctx.save();
+    ctx.translate(player.x,player.y);
+    ctx.strokeStyle='rgba(77,171,247,'+(0.2+Math.sin(game.frame*0.1)*0.1)+')';
+    ctx.lineWidth=2;ctx.shadowColor='#4dabf7';ctx.shadowBlur=15;
+    ctx.beginPath();ctx.arc(0,0,22,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;ctx.restore();
+  }
+
+  // Freeze overlay
+  if(freezeTimer>0){
+    ctx.fillStyle='rgba(116,192,252,'+(0.04+Math.sin(game.frame*0.05)*0.02)+')';
+    ctx.fillRect(0,0,W,H);
   }
 
   // Spawn progress bar
@@ -655,7 +769,9 @@ function startGame(){
   game.difficulty=settings.difficulty;
   game.scoreMul=diff.scoreMul;
   player.x=W/2;player.y=H-80;player.invincible=60;
-  BULLETS.length=0;enemyBullets.length=0;particles.length=0;
+  playerBuffs.attackspeed=0;playerBuffs.shield=0;
+  freezeTimer=0;
+  BULLETS.length=0;enemyBullets.length=0;particles.length=0;powerups.length=0;
   resetInput();
   initFormation();
 

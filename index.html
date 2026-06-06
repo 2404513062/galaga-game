@@ -8,25 +8,33 @@
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none;}
 html,body{width:100%;height:100%;background:#000;overflow:hidden;display:flex;justify-content:center;align-items:center;font-family:system-ui,sans-serif;}
 #gameWrap{position:relative;width:100%;max-width:480px;aspect-ratio:9/16;background:#0a0a1a;overflow:hidden;}
-
-/* ===== Canvas ===== */
 canvas{display:block;width:100%;height:100%;}
 
-/* ===== HUD Overlay ===== */
+/* HUD */
 #hud{position:absolute;top:0;left:0;right:0;pointer-events:none;display:flex;justify-content:space-between;padding:8px 10px;opacity:0;transition:opacity .3s;z-index:5;}
 #hud.show{opacity:1;}
 #hud span{background:rgba(0,0,0,.6);padding:3px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;text-shadow:0 0 6px rgba(0,200,255,.5);}
 
-/* ===== Game Controls ===== */
-#controls{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;padding:0 4px 10px;pointer-events:auto;gap:8px;opacity:0;transition:opacity .3s;z-index:10;}
+/* Controls */
+#controls{position:absolute;bottom:0;left:0;right:0;height:140px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:10;display:flex;align-items:flex-end;justify-content:space-between;padding:0 10px 16px;}
 #controls.show{opacity:1;}
-.ctrl-btn{flex:1;height:56px;border-radius:14px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);font-size:13px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;pointer-events:auto;}
-.ctrl-btn.pressed{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);}
-#fireBtn{flex:0 0 76px;border-color:rgba(255,100,100,.3);background:rgba(255,50,50,.1);color:rgba(255,100,100,.6);font-size:16px;}
-#fireBtn.pressed{background:rgba(255,50,50,.25);border-color:rgba(255,100,100,.6);}
-@media(max-width:400px){#hud span{font-size:11px;}.ctrl-btn{height:48px;font-size:11px;}#fireBtn{flex-basis:64px;font-size:14px;}}
 
-/* ===== HTML Overlays (Menu / Settings / Achievements) ===== */
+/* Joystick */
+#joyWrap{position:relative;width:130px;height:130px;pointer-events:auto;touch-action:none;}
+#joyBase{position:absolute;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.08) 0%,rgba(255,255,255,.03) 70%,transparent 100%);border:2px solid rgba(255,255,255,.12);}
+#joyKnob{position:absolute;width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.2),rgba(255,255,255,.05) 80%);border:2px solid rgba(255,255,255,.2);left:50%;top:50%;transform:translate(-50%,-50%);transition:none;box-shadow:0 0 15px rgba(77,171,247,.1);}
+#joyKnob.active{background:radial-gradient(circle at 35% 35%,rgba(77,171,247,.35),rgba(77,171,247,.08) 80%);border-color:rgba(77,171,247,.4);box-shadow:0 0 20px rgba(77,171,247,.2);}
+/* Joystick direction arrows */
+#joyBase::before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid rgba(255,255,255,.08);}
+#joyBase::after{content:'';position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid rgba(255,255,255,.08);}
+
+/* Fire button */
+#fireWrap{pointer-events:auto;display:flex;align-items:center;justify-content:center;}
+#fireBtn{width:80px;height:80px;border-radius:50%;border:3px solid rgba(255,80,80,.25);background:radial-gradient(circle at 35% 35%,rgba(255,50,50,.12),rgba(255,50,50,.04) 80%);color:rgba(255,80,80,.5);font-size:15px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .1s;}
+#fireBtn.pressed{background:radial-gradient(circle at 35% 35%,rgba(255,50,50,.25),rgba(255,50,50,.08) 80%);border-color:rgba(255,80,80,.5);transform:scale(.92);color:rgba(255,80,80,.8);}
+@media(max-width:400px){#joyWrap{width:110px;height:110px;}#joyBase{width:110px;height:110px;}#joyKnob{width:44px;height:44px;}#fireBtn{width:68px;height:68px;font-size:13px;}}
+
+/* Overlays */
 .overlay{position:absolute;top:0;left:0;right:0;bottom:0;z-index:20;display:flex;flex-direction:column;align-items:center;background:rgba(10,10,26,.92);justify-content:center;padding:20px;transition:opacity .25s;}
 .overlay.hidden{display:none;opacity:0;}
 .overlay h1{color:#4dabf7;font-size:36px;font-weight:bold;text-shadow:0 0 20px rgba(77,171,247,.5);margin-bottom:4px;}
@@ -38,15 +46,12 @@ canvas{display:block;width:100%;height:100%;}
 .overlay .btn.small{padding:8px 24px;font-size:14px;min-width:auto;}
 .overlay .btn.back{position:absolute;top:12px;left:12px;padding:8px 16px;font-size:13px;min-width:auto;}
 
-/* Settings */
 #settingsPage .row{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:280px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);}
 #settingsPage .row label{color:#aaa;font-size:14px;}
-#settingsPage .row .val{color:#fff;font-size:15px;font-weight:bold;}
 .opt-group{display:flex;gap:6px;}
 .opt-btn{padding:5px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#888;font-size:13px;cursor:pointer;transition:all .15s;pointer-events:auto;}
 .opt-btn.active{background:rgba(77,171,247,.2);border-color:#4dabf7;color:#4dabf7;}
 
-/* Achievements */
 #achievePage .ach-list{width:100%;max-width:300px;max-height:60%;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:10px 0;}
 .ach-item{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:4px 0;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);transition:all .2s;}
 .ach-item.locked{opacity:.3;}
@@ -57,7 +62,6 @@ canvas{display:block;width:100%;height:100%;}
 .ach-item .badge{font-size:12px;padding:3px 10px;border-radius:10px;}
 .ach-item .badge.done{background:rgba(77,171,247,.2);color:#4dabf7;}
 
-/* ===== Achievement popup ===== */
 #achPopup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;background:linear-gradient(135deg,#1a237e,#0d47a1);border:2px solid #ffd43b;border-radius:16px;padding:20px 30px;text-align:center;pointer-events:none;opacity:0;transition:opacity .3s;}
 #achPopup.show{opacity:1;}
 #achPopup .icon{font-size:40px;}
@@ -70,23 +74,25 @@ canvas{display:block;width:100%;height:100%;}
 <div id="gameWrap">
   <canvas id="gc"></canvas>
 
-  <!-- HUD -->
   <div id="hud">
     <span id="scoreDisp">0</span>
     <span id="waveDisp">WAVE 1</span>
     <span id="lifeDisp">❤❤❤</span>
   </div>
 
-  <!-- Controls -->
+  <!-- Controls: Joystick + Fire -->
   <div id="controls">
-    <div class="ctrl-btn" id="leftBtn">◀左</div>
-    <div class="ctrl-btn" id="fireBtn">🔫射击</div>
-    <div class="ctrl-btn" id="rightBtn">右▶</div>
+    <div id="joyWrap">
+      <div id="joyBase"></div>
+      <div id="joyKnob">✦</div>
+    </div>
+    <div id="fireWrap">
+      <div id="fireBtn">🔫</div>
+    </div>
   </div>
 
-  <!-- ===== MAIN MENU ===== -->
+  <!-- Menu -->
   <div class="overlay" id="menuPage">
-    <canvas id="menuCanvas"></canvas>
     <div style="z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;">
       <h1>银 河 战 机</h1>
       <div class="sub">GALAGA STRIKE</div>
@@ -96,7 +102,7 @@ canvas{display:block;width:100%;height:100%;}
     </div>
   </div>
 
-  <!-- ===== SETTINGS ===== -->
+  <!-- Settings -->
   <div class="overlay hidden" id="settingsPage">
     <div class="btn back" id="settingsBack">◀ 返回</div>
     <h2 style="color:#4dabf7;font-size:24px;margin-bottom:16px;">⚙ 设置</h2>
@@ -116,14 +122,13 @@ canvas{display:block;width:100%;height:100%;}
     </div>
   </div>
 
-  <!-- ===== ACHIEVEMENTS ===== -->
+  <!-- Achievements -->
   <div class="overlay hidden" id="achievePage">
     <div class="btn back" id="achieveBack">◀ 返回</div>
     <h2 style="color:#ffd43b;font-size:24px;margin-bottom:8px;">🏆 成就</h2>
     <div class="ach-list" id="achList"></div>
   </div>
 
-  <!-- ===== ACHIEVEMENT POPUP ===== -->
   <div id="achPopup"><div class="icon" id="popIcon">🏆</div><div class="title" id="popTitle"></div><div class="desc" id="popDesc"></div><div class="sub">成就已解锁！</div></div>
 </div>
 
@@ -144,9 +149,9 @@ var settings={
   lives:3,
 };
 var DIFFICULTY={
-  easy:{name:'简单',enemyHp:0,enemySpd:0.7,enemyFire:0.002,enemyDive:0.0015,diveSpd:0.7,scoreMul:0.8,waveCount:0.7},
-  normal:{name:'普通',enemyHp:1,enemySpd:1,enemyFire:0.004,enemyDive:0.003,diveSpd:1,scoreMul:1,waveCount:1},
-  hard:{name:'困难',enemyHp:2,enemySpd:1.4,enemyFire:0.007,enemyDive:0.005,diveSpd:1.3,scoreMul:1.5,waveCount:1.3},
+  easy:{name:'简单',enemyHp:0,enemySpd:0.7,enemyFire:0.002,enemyDive:0.0015,diveSpd:0.7,scoreMul:0.8,waveCount:0.7,spawnRate:30},
+  normal:{name:'普通',enemyHp:1,enemySpd:1,enemyFire:0.004,enemyDive:0.003,diveSpd:1,scoreMul:1,waveCount:1,spawnRate:20},
+  hard:{name:'困难',enemyHp:2,enemySpd:1.4,enemyFire:0.007,enemyDive:0.005,diveSpd:1.3,scoreMul:1.5,waveCount:1.3,spawnRate:12},
 };
 
 // ==================== Achievements ====================
@@ -168,7 +173,6 @@ var ACHIEVEMENTS=[
   {id:'hardWin',icon:'👑',name:'超越极限',desc:'困难难度下通过第5波',check:function(s){return s.hardWave>=5;}},
 ];
 var stats=loadStats();
-var lastUnlockCheck={};
 
 function loadStats(){
   try{
@@ -176,10 +180,7 @@ function loadStats(){
     return d||{totalKills:0,maxWave:0,bestScore:0,maxCombo:0,noHitWaves:0,hardWave:0,unlocked:[]};
   }catch(e){return {totalKills:0,maxWave:0,bestScore:0,maxCombo:0,noHitWaves:0,hardWave:0,unlocked:[]};}
 }
-function saveStats(){
-  try{localStorage.setItem('galaga_stats',JSON.stringify(stats));}catch(e){}
-}
-
+function saveStats(){try{localStorage.setItem('galaga_stats',JSON.stringify(stats));}catch(e){}}
 function getUnlocked(){return stats.unlocked||[];}
 function isUnlocked(id){return getUnlocked().indexOf(id)>=0;}
 function unlockAchieve(id){
@@ -212,44 +213,37 @@ function showNextPopup(){
   document.getElementById('popDesc').textContent=a.desc;
   var el=document.getElementById('achPopup');
   el.className='show';
-  setTimeout(function(){
-    el.className='';
-    setTimeout(showNextPopup,400);
-  },2200);
+  setTimeout(function(){el.className='';setTimeout(showNextPopup,400);},2200);
 }
 
 // ==================== Game State ====================
 var game={
-  state:'menu', // menu | playing | over
+  state:'menu',
   score:0,wave:1,lives:3,
   combo:0,comboTimer:0,
   screenShake:0,frame:0,
-  totalKills:0,waveKills:0,
+  totalKills:0,
   maxComboThisGame:0,
-  bestScoreThisGame:0,
   noHit:true,noHitWaves:0,
   difficulty:'normal',
   scoreMul:1,
-  startHp:3,
+  enemiesSpawned:0,
+  spawnTimer:0,
 };
-var player={
-  x:W/2,y:H-80,speed:5,shootCD:0,invincible:0,
-};
+var player={x:W/2,y:H-80,speed:5,shootCD:0,invincible:0};
 var BULLETS=[];
 var enemies=[];
 var enemyBullets=[];
 var particles=[];
-var input={left:false,right:false,fire:false};
+// input: dx (float -1~1), dy (float -1~1), fire (bool)
+var input={dx:0,dy:0,fire:false};
 var stars=[];
 
 for(var i=0;i<50;i++){
   stars.push({x:Math.random()*W,y:Math.random()*H,s:0.5+Math.random()*1.5,sp:0.3+Math.random()*0.8});
 }
 
-var FORMATION_ROWS=5;
-var FORMATION_COLS=8;
-
-// ==================== Game Functions ====================
+// ==================== Init Formation ====================
 function initFormation(){
   enemies=[];
   var diff=DIFFICULTY[game.difficulty]||DIFFICULTY.normal;
@@ -266,26 +260,33 @@ function initFormation(){
       if(t==='boss'){hp=4+(diff.enemyHp||1)+Math.floor(game.wave/3);pts=50;color='#da77f2';size=14;}
       enemies.push({
         x:ex,y:ey,ox:ex,oy:ey,hp:Math.max(1,hp),
+        maxHp:Math.max(1,hp),
         color:color,pts:pts,size:size,type:t,
-        alive:true,diving:false,diveSpeed:(2+game.wave*0.1)*diff.diveSpd,
+        alive:false,  // 初始未生成
+        spawned:false,
+        diving:false,diveSpeed:(2+game.wave*0.1)*diff.diveSpd,
         shootCD:0,formationR:r,formationC:c,
       });
     }
   }
   game.enemyTotal=enemies.length;
+  game.enemiesSpawned=0;
+  game.spawnTimer=0;
 }
 
+var FORMATION_ROWS=5;
+var FORMATION_COLS=8;
+
+// ==================== Shooting ====================
 function shoot(){
   if(player.shootCD>0)return;
   BULLETS.push({x:player.x,y:player.y-20,vx:0,vy:-8});
   player.shootCD=10;
-  for(var i=0;i<4;i++){
-    particles.push({
-      x:player.x+(Math.random()-0.5)*12,y:player.y-18,
-      vx:(Math.random()-0.5)*2,vy:-Math.random()*3-1,
-      life:8+Math.random()*4,maxLife:12,color:'#ffd43b',size:2+Math.random()*2,
-    });
-  }
+  for(var i=0;i<4;i++)particles.push({
+    x:player.x+(Math.random()-0.5)*12,y:player.y-18,
+    vx:(Math.random()-0.5)*2,vy:-Math.random()*3-1,
+    life:8+Math.random()*4,maxLife:12,color:'#ffd43b',size:2+Math.random()*2,
+  });
 }
 
 function startDive(enemy){
@@ -295,18 +296,38 @@ function startDive(enemy){
   enemy.diveTargetY=player.y+40;
 }
 
+// ==================== Spawn Enemy (from queue) ====================
+function spawnNextEnemy(){
+  for(var i=0;i<enemies.length;i++){
+    var e=enemies[i];
+    if(!e.spawned&&!e.alive){
+      e.spawned=true;
+      e.alive=true;
+      game.enemiesSpawned++;
+      // Spawn effect
+      for(var j=0;j<10;j++)particles.push({
+        x:e.x+(Math.random()-0.5)*20,y:e.y+(Math.random()-0.5)*20,
+        vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,
+        life:10+Math.random()*10,maxLife:20,
+        color:e.color,size:2+Math.random()*3,
+      });
+      return;
+    }
+  }
+}
+
+// ==================== Hit Player ====================
 function hitPlayer(){
   game.lives--;
   game.noHit=false;
   player.invincible=90;
-  game.screenShake=12;
-  for(var i=0;i<25;i++){
-    particles.push({
-      x:player.x+(Math.random()-0.5)*20,y:player.y+(Math.random()-0.5)*20,
-      vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,
-      life:15+Math.random()*15,maxLife:30,color:'#ff6b6b',size:2+Math.random()*4,
-    });
-  }
+  // 死亡时不震动屏幕
+  if(game.lives>0)game.screenShake=12;
+  for(var i=0;i<25;i++)particles.push({
+    x:player.x+(Math.random()-0.5)*20,y:player.y+(Math.random()-0.5)*20,
+    vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,
+    life:15+Math.random()*15,maxLife:30,color:'#ff6b6b',size:2+Math.random()*4,
+  });
   if(game.lives<=0)game.state='over';
   enemyBullets=[];
 }
@@ -314,15 +335,11 @@ function hitPlayer(){
 function waveBonus(){
   var bonus=game.wave*100*game.scoreMul;
   game.score+=bonus;
-  // show bonus text
-  for(var i=0;i<15;i++){
-    particles.push({
-      x:W/2+(Math.random()-0.5)*40,y:H/2+(Math.random()-0.5)*20,
-      vx:(Math.random()-0.5)*2,vy:-Math.random()*2-1,
-      life:30+Math.random()*20,maxLife:50,
-      color:'#ffd43b',size:3+Math.random()*3,
-    });
-  }
+  for(var i=0;i<15;i++)particles.push({
+    x:W/2+(Math.random()-0.5)*40,y:H/2+(Math.random()-0.5)*20,
+    vx:(Math.random()-0.5)*2,vy:-Math.random()*2-1,
+    life:30+Math.random()*20,maxLife:50,color:'#ffd43b',size:3+Math.random()*3,
+  });
 }
 
 // ==================== Update ====================
@@ -330,13 +347,30 @@ function update(){
   game.frame++;
 
   if(game.state==='playing'){
-    if(input.left)player.x=Math.max(20,player.x-player.speed);
-    if(input.right)player.x=Math.min(W-20,player.x+player.speed);
+    // ===== Player movement with joystick =====
+    var mx=input.dx,my=input.dy;
+    if(mx!==0||my!==0){
+      // Normalize diagonal
+      if(mx!==0&&my!==0){mx*=0.707;my*=0.707;}
+      player.x=Math.max(20,Math.min(W-20,player.x+mx*player.speed));
+      player.y=Math.max(30,Math.min(H-70,player.y+my*player.speed));
+    }
     if(input.fire)shoot();
     if(player.shootCD>0)player.shootCD--;
     if(player.invincible>0)player.invincible--;
 
-    // Player bullets
+    // ===== Spawn enemies gradually =====
+    var diff=DIFFICULTY[game.difficulty]||DIFFICULTY.normal;
+    if(game.enemiesSpawned<game.enemyTotal){
+      game.spawnTimer--;
+      if(game.spawnTimer<=0){
+        var spawnCount=Math.min(2,game.enemyTotal-game.enemiesSpawned);
+        for(var si=0;si<spawnCount;si++)spawnNextEnemy();
+        game.spawnTimer=diff.spawnRate||20;
+      }
+    }
+
+    // ===== Player bullets =====
     for(var i=BULLETS.length-1;i>=0;i--){
       var b=BULLETS[i];
       b.x+=b.vx;b.y+=b.vy;
@@ -378,22 +412,20 @@ function update(){
     if(game.comboTimer>0)game.comboTimer--;
     else game.combo=0;
 
-    // Enemies
+    // ===== Check wave clear (all spawned AND all dead) =====
     var liveEnemies=[];
     for(var j=0;j<enemies.length;j++){if(enemies[j].alive)liveEnemies.push(enemies[j]);}
-    if(liveEnemies.length===0){
-      // Wave complete - check noHit
-      if(game.noHit){game.noHitWaves++;}
+    if(liveEnemies.length===0&&game.enemiesSpawned>=game.enemyTotal){
+      if(game.noHit)game.noHitWaves++;
       game.noHit=true;
       waveBonus();
       game.wave++;
-      // Update stats in real time
       if(game.wave>stats.maxWave){stats.maxWave=game.wave;saveStats();}
       initFormation();
       return;
     }
 
-    var diff=DIFFICULTY[game.difficulty]||DIFFICULTY.normal;
+    // ===== Enemy behavior =====
     var wavePhase=game.frame*0.02;
 
     for(var j=0;j<enemies.length;j++){
@@ -413,17 +445,15 @@ function update(){
         if(dist>5){e.x+=dx/dist*e.diveSpeed;e.y+=dy/dist*e.diveSpeed;}
         else{
           e.diving=false;
-          e.ox=60+e.formationC*(300/(Math.min(FORMATION_COLS,Math.round(FORMATION_COLS*(diff.waveCount||1)))));
+          var countMul=(DIFFICULTY[game.difficulty]||DIFFICULTY.normal).waveCount||1;
+          e.ox=60+e.formationC*(300/(Math.min(FORMATION_COLS,Math.round(FORMATION_COLS*countMul))));
           e.oy=30+e.formationR*28;
           e.x=e.ox;e.y=e.oy;
         }
         if(e.type==='galaga'||e.type==='boss'){
           e.shootCD--;
           if(e.shootCD<=0&&Math.random()<diff.enemyFire){
-            enemyBullets.push({
-              x:e.x,y:e.y+10,vx:(player.x-e.x)*0.02,
-              vy:2+Math.min(game.wave*0.03,0.8),
-            });
+            enemyBullets.push({x:e.x,y:e.y+10,vx:(player.x-e.x)*0.02,vy:2+Math.min(game.wave*0.03,0.8)});
             e.shootCD=90;
           }
         }
@@ -431,7 +461,7 @@ function update(){
       }
     }
 
-    // Enemy bullets
+    // ===== Enemy bullets =====
     for(var i=enemyBullets.length-1;i>=0;i--){
       var b=enemyBullets[i];
       b.x+=b.vx;b.y+=b.vy;
@@ -441,7 +471,7 @@ function update(){
       }
     }
 
-    // Particles
+    // ===== Particles =====
     for(var i=particles.length-1;i>=0;i--){
       var p=particles[i];
       p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life--;
@@ -507,7 +537,6 @@ function draw(){
   }
   ctx.globalAlpha=1;ctx.shadowBlur=0;
 
-  // Combo
   if(game.combo>=3){
     ctx.fillStyle='#ffd43b';ctx.font='bold 20px system-ui,sans-serif';ctx.textAlign='center';
     ctx.shadowColor='#ffd43b';ctx.shadowBlur=10;
@@ -515,7 +544,15 @@ function draw(){
     ctx.shadowBlur=0;
   }
 
-  // Wave bonus text
+  // Spawn progress bar
+  if(game.enemiesSpawned<game.enemyTotal){
+    var pct=game.enemiesSpawned/game.enemyTotal;
+    ctx.fillStyle='rgba(255,255,255,0.08)';
+    ctx.fillRect(W/2-60,12,120,4);
+    ctx.fillStyle='rgba(77,171,247,0.4)';
+    ctx.fillRect(W/2-60,12,120*pct,4);
+  }
+
   ctx.restore();
 }
 
@@ -548,9 +585,10 @@ function drawEnemy(e){
     ctx.fillStyle='#fff';ctx.fillRect(-s*0.8,-s*1.2,3,s*0.6);ctx.fillRect(s*0.6,-s*1.2,3,s*0.6);
   }
   if(e.type!=='bee'&&e.hp>1){
-    var bw=s*2;
+    var bw=s*2;var pct=e.hp/e.maxHp;
     ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(-bw/2,-s-8,bw,4);
-    ctx.fillStyle='#4caf50';ctx.fillRect(-bw/2,-s-8,bw*(e.hp/(4+(DIFFICULTY[game.difficulty]||DIFFICULTY.normal).enemyHp+Math.floor(game.wave/3))),4);
+    ctx.fillStyle=pct>0.5?'#4caf50':pct>0.25?'#ff9800':'#e53935';
+    ctx.fillRect(-bw/2,-s-8,bw*pct,4);
   }
   ctx.restore();
 }
@@ -572,21 +610,18 @@ function drawGameOver(){
   ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#ff6b6b';ctx.font='bold 36px system-ui,sans-serif';ctx.textAlign='center';
   ctx.shadowColor='#ff6b6b';ctx.shadowBlur=20;
-  ctx.fillText('💥 游戏结束',W/2,200);
-  ctx.shadowBlur=0;
+  ctx.fillText('💥 游戏结束',W/2,200);ctx.shadowBlur=0;
   ctx.fillStyle='#ffd43b';ctx.font='bold 28px system-ui,sans-serif';
   ctx.fillText('得分: '+game.score,W/2,255);
   ctx.fillStyle='#aaa';ctx.font='16px system-ui,sans-serif';
-  ctx.fillText('到达波次: '+game.wave+'  |  击杀: '+game.totalKills, W/2,295);
-  if(game.maxComboThisGame>=3)ctx.fillText('最高连击: '+game.maxComboThisGame, W/2,320);
+  ctx.fillText('到达波次: '+game.wave+'  |  击杀: '+game.totalKills,W/2,295);
+  if(game.maxComboThisGame>=3)ctx.fillText('最高连击: '+game.maxComboThisGame,W/2,320);
 
-  // New unlocks
   var newUnlocks=getUnlocked().length;
   if(newUnlocks>0){
     ctx.fillStyle='#ffd43b';ctx.font='14px system-ui,sans-serif';
     ctx.fillText('🏆 已解锁 '+newUnlocks+'/'+ACHIEVEMENTS.length+' 个成就',W/2,355);
   }
-
   if(Math.floor(game.frame/30)%2===0){
     ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='18px system-ui,sans-serif';
     ctx.fillText('点击屏幕重新开始',W/2,420);
@@ -601,17 +636,17 @@ function loop(){
 
 // ==================== Input Reset ====================
 function resetInput(){
-  input.left=false;input.right=false;input.fire=false;
-  document.querySelectorAll('.ctrl-btn').forEach(function(el){el.classList.remove('pressed');});
+  input.dx=0;input.dy=0;input.fire=false;
+  var knob=document.getElementById('joyKnob');
+  if(knob){knob.style.transform='translate(-50%,-50%)';knob.classList.remove('active');}
 }
 window.addEventListener('touchcancel',resetInput);
 
-// ==================== Start Game ====================
+// ==================== Start / End Game ====================
 function startGame(){
   var diff=DIFFICULTY[settings.difficulty]||DIFFICULTY.normal;
   game.state='playing';
-  game.score=0;
-  game.wave=1;
+  game.score=0;game.wave=1;
   game.lives=settings.lives;
   game.combo=0;game.comboTimer=0;
   game.screenShake=0;game.frame=0;
@@ -620,7 +655,8 @@ function startGame(){
   game.difficulty=settings.difficulty;
   game.scoreMul=diff.scoreMul;
   player.x=W/2;player.y=H-80;player.invincible=60;
-  BULLETS.length=0;enemyBullets.length=0;particles.length=0;resetInput();
+  BULLETS.length=0;enemyBullets.length=0;particles.length=0;
+  resetInput();
   initFormation();
 
   document.getElementById('menuPage').className='overlay hidden';
@@ -629,7 +665,6 @@ function startGame(){
 }
 
 function endGame(){
-  // Save stats
   if(game.score>stats.bestScore)stats.bestScore=game.score;
   if(game.wave>stats.maxWave)stats.maxWave=game.wave;
   stats.totalKills+=game.totalKills;
@@ -643,11 +678,9 @@ function endGame(){
   document.getElementById('controls').className='';
 }
 
-// ==================== UI Event Setup ====================
-// ---- Menu ----
+// ==================== UI Menus ====================
 document.getElementById('menuStart').addEventListener('click',startGame);
 document.getElementById('menuStart').addEventListener('touchend',function(e){e.preventDefault();startGame();});
-
 document.getElementById('menuSettings').addEventListener('click',function(){
   document.getElementById('menuPage').className='overlay hidden';
   document.getElementById('settingsPage').className='overlay';
@@ -657,10 +690,12 @@ document.getElementById('menuAchieve').addEventListener('click',function(){
   document.getElementById('menuPage').className='overlay hidden';
   document.getElementById('achievePage').className='overlay';
 });
-
-// ---- Settings ----
 document.getElementById('settingsBack').addEventListener('click',function(){
   document.getElementById('settingsPage').className='overlay hidden';
+  document.getElementById('menuPage').className='overlay';
+});
+document.getElementById('achieveBack').addEventListener('click',function(){
+  document.getElementById('achievePage').className='overlay hidden';
   document.getElementById('menuPage').className='overlay';
 });
 
@@ -681,15 +716,8 @@ document.querySelectorAll('#settingsPage .opt-btn[data-lives]').forEach(function
 document.getElementById('resetAchieve').addEventListener('click',function(){
   if(confirm('确定要重置所有成就数据吗？')){
     stats={totalKills:0,maxWave:0,bestScore:0,maxCombo:0,noHitWaves:0,hardWave:0,unlocked:[]};
-    saveStats();
-    alert('已重置！');
+    saveStats();alert('已重置！');
   }
-});
-
-// ---- Achievements ----
-document.getElementById('achieveBack').addEventListener('click',function(){
-  document.getElementById('achievePage').className='overlay hidden';
-  document.getElementById('menuPage').className='overlay';
 });
 
 function renderAchievements(){
@@ -705,7 +733,7 @@ function renderAchievements(){
   });
 }
 
-// ---- Game Over click ----
+// Canvas click/touch for game over
 canvas.addEventListener('click',function(){
   if(game.state==='over'){endGame();startGame();}
 });
@@ -713,36 +741,112 @@ canvas.addEventListener('touchstart',function(e){
   if(game.state==='over'){e.preventDefault();endGame();startGame();}
 });
 
-// ---- Controls ----
-function setupBtn(el,key){
-  el.addEventListener('touchstart',function(e){e.preventDefault();input[key]=true;el.classList.add('pressed');if(game.state==='over'){endGame();startGame();}},{passive:false});
-  el.addEventListener('touchend',function(e){e.preventDefault();input[key]=false;el.classList.remove('pressed');},{passive:false});
-  el.addEventListener('touchcancel',function(){input[key]=false;el.classList.remove('pressed');});
-  el.addEventListener('mousedown',function(){input[key]=true;el.classList.add('pressed');});
-  el.addEventListener('mouseup',function(){input[key]=false;el.classList.remove('pressed');});
-  el.addEventListener('mouseleave',function(){input[key]=false;el.classList.remove('pressed');});
-}
-setupBtn(document.getElementById('leftBtn'),'left');
-setupBtn(document.getElementById('rightBtn'),'right');
-setupBtn(document.getElementById('fireBtn'),'fire');
+// ==================== Joystick Controls ====================
+var joyWrap=document.getElementById('joyWrap');
+var joyKnob=document.getElementById('joyKnob');
+var joyRect=null;
+var joyTouchId=null;
+var JOY_RADIUS=40;
 
-// Keyboard
+function getJoyCenter(){
+  joyRect=joyWrap.getBoundingClientRect();
+  return {x:joyRect.left+joyRect.width/2,y:joyRect.top+joyRect.height/2};
+}
+
+function updateJoystick(tx,ty){
+  var center=getJoyCenter();
+  var dx=tx-center.x,dy=ty-center.y;
+  var dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist>JOY_RADIUS){dx=dx/dist*JOY_RADIUS;dy=dy/dist*JOY_RADIUS;dist=JOY_RADIUS;}
+  input.dx=dx/JOY_RADIUS;
+  input.dy=dy/JOY_RADIUS;
+  moveKnob(dx,dy);
+}
+
+function moveKnob(dx,dy){
+  joyKnob.style.transform='translate(calc(-50% + '+dx+'px),calc(-50% + '+dy+'px))';
+  joyKnob.classList.add('active');
+}
+
+function resetJoystick(){
+  input.dx=0;input.dy=0;
+  joyKnob.style.transform='translate(-50%,-50%)';
+  joyKnob.classList.remove('active');
+  joyTouchId=null;
+}
+
+joyWrap.addEventListener('touchstart',function(e){
+  e.preventDefault();
+  var t=e.changedTouches[0];
+  joyTouchId=t.identifier;
+  updateJoystick(t.clientX,t.clientY);
+},{passive:false});
+
+document.addEventListener('touchmove',function(e){
+  if(joyTouchId===null)return;
+  for(var i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier===joyTouchId){
+      e.preventDefault();
+      updateJoystick(e.changedTouches[i].clientX,e.changedTouches[i].clientY);
+    }
+  }
+},{passive:false});
+
+document.addEventListener('touchend',function(e){
+  for(var i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier===joyTouchId){
+      resetJoystick();
+    }
+  }
+});
+
+// Mouse support for joystick (PC debug)
+var mouseJoystick=false;
+joyWrap.addEventListener('mousedown',function(e){
+  mouseJoystick=true;
+  updateJoystick(e.clientX,e.clientY);
+});
+document.addEventListener('mousemove',function(e){
+  if(!mouseJoystick)return;
+  updateJoystick(e.clientX,e.clientY);
+});
+document.addEventListener('mouseup',function(){
+  if(mouseJoystick){mouseJoystick=false;resetJoystick();}
+});
+
+// ==================== Fire Button ====================
+var fireBtn=document.getElementById('fireBtn');
+fireBtn.addEventListener('touchstart',function(e){e.preventDefault();input.fire=true;fireBtn.classList.add('pressed');if(game.state==='over'){endGame();startGame();}},{passive:false});
+fireBtn.addEventListener('touchend',function(e){e.preventDefault();input.fire=false;fireBtn.classList.remove('pressed');},{passive:false});
+fireBtn.addEventListener('touchcancel',function(){input.fire=false;fireBtn.classList.remove('pressed');});
+fireBtn.addEventListener('mousedown',function(){input.fire=true;fireBtn.classList.add('pressed');});
+fireBtn.addEventListener('mouseup',function(){input.fire=false;fireBtn.classList.remove('pressed');});
+
+// ==================== Keyboard ====================
 document.addEventListener('keydown',function(e){
-  if(e.key==='ArrowLeft'||e.key==='a')input.left=true;
-  if(e.key==='ArrowRight'||e.key==='d')input.right=true;
-  if(e.key===' '||e.key==='ArrowUp'){e.preventDefault();input.fire=true;
-    if(game.state==='over'){endGame();startGame();}
-    else if(game.state==='menu')startGame();
+  switch(e.key){
+    case 'ArrowLeft':case 'a':input.dx=-1;break;
+    case 'ArrowRight':case 'd':input.dx=1;break;
+    case 'ArrowUp':case 'w':input.dy=-1;break;
+    case 'ArrowDown':case 's':input.dy=1;break;
+    case ' ':case 'ArrowUp':e.preventDefault();input.fire=true;
+      if(game.state==='over'){endGame();startGame();}
+      else if(game.state==='menu')startGame();
+      break;
   }
 });
 document.addEventListener('keyup',function(e){
-  if(e.key==='ArrowLeft'||e.key==='a')input.left=false;
-  if(e.key==='ArrowRight'||e.key==='d')input.right=false;
-  if(e.key===' '||e.key==='ArrowUp'){e.preventDefault();input.fire=false;}
+  switch(e.key){
+    case 'ArrowLeft':case 'a':if(input.dx<0)input.dx=0;break;
+    case 'ArrowRight':case 'd':if(input.dx>0)input.dx=0;break;
+    case 'ArrowUp':case 'w':if(input.dy<0)input.dy=0;break;
+    case 'ArrowDown':case 's':if(input.dy>0)input.dy=0;break;
+    case ' ':case 'ArrowUp':e.preventDefault();input.fire=false;break;
+  }
 });
 
 // ==================== Init ====================
-initFormation();for(var i=0;i<enemies.length;i++){enemies[i].alive=false;}
+initFormation();
 loop();
 </script>
 </body>
